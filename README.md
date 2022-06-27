@@ -35,6 +35,6 @@ J'ai utilisé le système d'authentification basique proposé par DRF en le déc
 Installez django et djangorestframework en exécutant la commande `pip install -r requirements.txt` dans le répertoire de l'application.
 
 ## Postman
-
+Lien des endpoints postman [ici](https://documenter.getpostman.com/view/18150156/UzBsK5Wf)
 ## WIP
 Je mettrai à jour l'application au fur et à mesure pour qu'elle réponde le mieux aux spécifications demandées.
