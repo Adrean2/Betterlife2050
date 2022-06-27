@@ -59,7 +59,7 @@ class Project(models.Model):
     members = models.ManyToManyField(to=User, related_name="project_member",through="ProjectMember")
 
     def __str__(self):
-        return f"{self.title}, {self.organization.name}"
+        return f"{self.id}, {self.title}, {self.organization.name}"
 
 
 class ProjectMember(models.Model):
@@ -79,10 +79,10 @@ class Comment(models.Model):
 
     content = models.TextField(blank=True)
     date_published = models.DateTimeField(auto_now_add=True)
-    project = models.ForeignKey(Project,on_delete=CASCADE)
+    project = models.ForeignKey(Project,on_delete=CASCADE,blank=True,null=True)
     author = models.ForeignKey(User,on_delete=CASCADE,blank=True,null=True)
     answer = models.ForeignKey(to='self',on_delete=models.CASCADE,blank=True,null=True,related_name='+')
-    isParent = models.BooleanField(default=False)
+    isParent = models.BooleanField(default=False,blank=True)
 
     def __str__(self):
         return f"comment {self.id}, created at {self.date_published} by {self.author.username}"

@@ -17,7 +17,6 @@ def find_org_member(user,obj):
     return None
 
 
-# correct queries depending on obj
 def find_project_member(user,obj):
     project_member = None
     if type(obj) == models.Project:
@@ -159,3 +158,10 @@ class is_admin_or_not_create(BasePermission):
             return True
         else:
             return request.user.is_superuser
+        
+
+class is_org_member_or_not_create(BasePermission):
+    def has_permission(self, request, view):
+        print(view)
+        print(request)
+        return False

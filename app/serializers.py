@@ -67,7 +67,7 @@ class OrganizationMemberListSerializer(ModelSerializer):
 class CommentSerializer(ModelSerializer):
     class Meta:
         model = models.Comment
-        fields = "__all__"
+        fields = ["id","author","content","answer","project"]
     
 
 class CommentAnswerSerializer(ModelSerializer):
@@ -75,6 +75,7 @@ class CommentAnswerSerializer(ModelSerializer):
     class Meta:
         model = models.Comment
         fields = ["id","author"]
+
 
 class CommentListSerializer(ModelSerializer):
     author = UserSerializer()

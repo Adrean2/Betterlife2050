@@ -6,19 +6,26 @@ from . import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 
-role_based_permissions = [is_admin_authenticated|is_org_admin|is_org_member|is_project_owner|is_project_member]
 
 
 class User(viewsets.ModelViewSet):
-    permission_classes = [is_admin_authenticated|managing_members]
+    permission_classes = [is_admin_authenticated]
     serializer_class = serializers.UserSerializer
     queryset = models.User.objects.all()
 
 
+role_based_permissions = [is_admin_authenticated|is_org_admin|is_org_member|is_project_owner|is_project_member]
 class Project(viewsets.ModelViewSet):
     permission_classes = role_based_permissions
     serializer_class = serializers.ProjectSerializer
-    queryset= models.Project.objects.all()
+
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            queryset = models.Project.objects.all()
+        else:
+            queryset = models.Project.objects.filter(members=self.request.user)
+        return queryset
 
 
     def perform_create(self,serializer):
@@ -47,12 +54,12 @@ class Comment(viewsets.ModelViewSet):
     queryset = models.Comment.objects.all()
 
     def perform_create(self,serializer):
-        comment = serializer.save()
-        # update parent comment
+        comment = serializer.save(author=self.request.user)
+        # update parent comment if answer id is used
         if comment.answer is not None:
             comment.answer.isParent = True
             comment.answer.save()
-        serializer.save(author=self.request.user)
+            comment.project = comment.answer.project
 
     def destroy(self,request, *args,**kwargs ):
         instance = self.get_object()
@@ -80,9 +87,17 @@ class Comment(viewsets.ModelViewSet):
 
 
 class Organization(viewsets.ModelViewSet):
-    permission_classes = [is_admin_or_not_create,is_org_member]
+    permission_classes = role_based_permissions + [is_admin_or_not_create]
     serializer_class = serializers.OrganizationSerializer
     queryset = models.Organization.objects.all()
+
+
+    def get_queryset(self):
+            if self.request.user.is_superuser:
+                queryset = models.Organization.objects.all()
+            else:
+                queryset = models.Organization.objects.filter(members=self.request.user)
+            return queryset
 
 
     def list(self,request):
@@ -104,11 +119,13 @@ class ProjectMember(viewsets.ModelViewSet):
     serializer_class = serializers.ProjectMemberSerializer
     queryset = models.ProjectMember.objects.all()
 
+
     def list(self,request):
         queryset = self.get_queryset()
         serializer = serializers.ProjectMemberListSerializer(queryset,many=True)
         return Response(serializer.data)
     
+
     def retrieve(self,request,pk=None):
         try:
             instance = models.ProjectMember.objects.get(pk=pk)
@@ -117,7 +134,6 @@ class ProjectMember(viewsets.ModelViewSet):
         except ObjectDoesNotExist:
             return Response("This member doesn't exist.", status=status.HTTP_404_NOT_FOUND)
         
-
     
 class OrganizationMember(viewsets.ModelViewSet):
     permission_classes = [is_admin_authenticated|managing_members]
