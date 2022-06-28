@@ -158,10 +158,4 @@ class is_admin_or_not_create(BasePermission):
             return True
         else:
             return request.user.is_superuser
-        
-
-class is_org_member_or_not_create(BasePermission):
-    def has_permission(self, request, view):
-        print(view)
-        print(request)
-        return False
+    
