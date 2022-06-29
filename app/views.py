@@ -1,11 +1,13 @@
 from rest_framework import viewsets,status
 from rest_framework.response import Response
-from app.permissions import comment_deletion, is_admin_or_not_create,is_project_member, is_project_owner,is_org_member,is_admin_authenticated,is_org_admin,managing_members
-from . import serializers
-from . import models
+from app.permissions import comment_deletion, create_organization_member,create_project,create_project_member,create_organization,is_project_member, is_project_owner,is_org_member,is_admin_authenticated,is_org_admin,managing_members
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
+from . import serializers
+from . import models
 
+
+role_based_permissions = [is_admin_authenticated|is_org_admin|is_org_member|is_project_owner|is_project_member]
 
 
 class User(viewsets.ModelViewSet):
@@ -14,9 +16,8 @@ class User(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
 
 
-role_based_permissions = [is_admin_authenticated|is_org_admin|is_org_member|is_project_owner|is_project_member]
 class Project(viewsets.ModelViewSet):
-    permission_classes = role_based_permissions
+    permission_classes = role_based_permissions + [create_project,]
     serializer_class = serializers.ProjectSerializer
 
 
@@ -61,6 +62,7 @@ class Comment(viewsets.ModelViewSet):
             comment.answer.save()
             comment.project = comment.answer.project
 
+
     def destroy(self,request, *args,**kwargs ):
         instance = self.get_object()
         if instance.isParent is True:
@@ -87,7 +89,7 @@ class Comment(viewsets.ModelViewSet):
 
 
 class Organization(viewsets.ModelViewSet):
-    permission_classes = role_based_permissions + [is_admin_or_not_create]
+    permission_classes = [create_organization, ]+ role_based_permissions
     serializer_class = serializers.OrganizationSerializer
     queryset = models.Organization.objects.all()
 
@@ -105,6 +107,7 @@ class Organization(viewsets.ModelViewSet):
         serializer = serializers.OrganizationListSerializer(queryset,many=True)
         return Response(serializer.data)
     
+
     def retrieve(self,request,pk=None):
         try:
             instance = models.Organization.objects.get(pk=pk)
@@ -115,7 +118,7 @@ class Organization(viewsets.ModelViewSet):
 
 
 class ProjectMember(viewsets.ModelViewSet):
-    permission_classes = [is_admin_authenticated|managing_members]
+    permission_classes = [create_project_member,is_admin_authenticated|managing_members]
     serializer_class = serializers.ProjectMemberSerializer
     queryset = models.ProjectMember.objects.all()
 
@@ -136,14 +139,16 @@ class ProjectMember(viewsets.ModelViewSet):
         
     
 class OrganizationMember(viewsets.ModelViewSet):
-    permission_classes = [is_admin_authenticated|managing_members]
+    permission_classes = [create_organization_member,is_admin_authenticated|managing_members]
     serializer_class = serializers.OrganizationMemberSerializer
     queryset = models.OrganizationMember.objects.all()
+
 
     def list(self,request):
         queryset = self.get_queryset()
         serializer = serializers.OrganizationMemberListSerializer(queryset,many=True)
         return Response(serializer.data)
+
 
     def retrieve(self,request,pk=None):
         try:

@@ -44,7 +44,6 @@ class ProjectMemberSerializer(ModelSerializer):
 
 class ProjectMemberListSerializer(ModelSerializer):
     user = UserSerializer()
-    project = ProjectListSerializer()
     class Meta:
         model = models.ProjectMember
         fields = ["id","user","role","project"]
